@@ -6,7 +6,9 @@ const virtualConsole = new jsdom.VirtualConsole();
 virtualConsole.on("error", console.error);
 virtualConsole.on("warn", console.warn);
 virtualConsole.on("info", console.info);
+virtualConsole.on("log", console.log);
 virtualConsole.on("dir", console.dir);
+virtualConsole.on('jsdomError', (err) => console.error('jsdom error:',err.message));
 // virtualConsole.sendTo(console);
 
 const rootURL = 'http://localhost/';
@@ -27,6 +29,7 @@ class LocalResourceLoader extends jsdom.ResourceLoader {
 
 module.exports = {
     runInVM() {
+        process.on('uncaughtException', (err) => console.error('Uncaught Exception',err.message));
         return jsdom.JSDOM.fromFile('./index.html', {
             virtualConsole,
             url: rootURL,
@@ -35,11 +38,13 @@ module.exports = {
             resources: new LocalResourceLoader(),
             // pretendToBeVisual: true,
             beforeParse(window) {
-                // window.fetch = (new LocalResourceLoader()).fetch;
-                // window.fetch = fetch;
-                window.navigator.fetch = () => {
-                    console.warn('navigate.fetch not implemented');
-                }
+
+                window.location = new URL(rootURL);
+                window.location.reload = () => {};
+
+                window.fetch = function() {
+                    return Promise.reject(new Error('Fetch not supported'));
+                };
 
                 // TODO Layout methods (i.e. .getComputedTextLength, .getBBox, .getTotalLength)
                 // https://github.com/jsdom/jsdom/issues/1664
@@ -62,11 +67,9 @@ module.exports = {
                     return 0;
                 };
 
-                const objectURLMap = {};
+                const objectURLMap = new Map();
                 window.URL.createObjectURL = (blob) => {
                     const uuid = Math.random().toString(36).slice(2);
-                    // const path = `node_modules/.cache/${uuid}.png`;
-                    // const path = `./images/${uuid}.png`;
                     const impl = blob[Object.getOwnPropertySymbols(blob)[0]];
                     const buffer = Buffer.from(impl._buffer);
                     const type = impl.type;
@@ -76,6 +79,9 @@ module.exports = {
                             path = `${cacheDir}/${uuid}.svg`;
                             break;
                         case 'image/png':
+                            path = `${cacheDir}/${uuid}.png`;
+                            break;
+                        case 'image/jpeg':
                             path = `${cacheDir}/${uuid}.png`;
                             break;
                         case 'text/plain':
@@ -88,26 +94,28 @@ module.exports = {
                             console.warn('Unexpected type',impl.type);
                             path = `${cacheDir}/${uuid}`;
                     }
+                    console.log(`Saving file to ${path}`);
                     fs.writeFileSync(path, buffer);
                     // fs.writeFile(path, buffer, (err) => {
                     //     if (err) console.error(err,path);
                     //     else console.log('The file has been saved!',path);
                     // });
                     const url = `${rootURL}${path}`;
-                    objectURLMap[url] = path;
+                    console.log('objectURL',url)
+                    objectURLMap.set(url,path);
                     return url;
                 };
                 window.URL.revokeObjectURL = (url) => {
                     // console.warn('revokeObjectURL not implemented', url);
-                    return;
-                    // console.log('unlink',url);
-                    // if (!objectURLMap.has(url)) {
-                    //     console.warn('image missing')
-                    // }
-                    // fs.unlinkSync(objectURLMap[url]);
-                    // delete objectURLMap[url];
+                    // return;
+                    console.log('unlinking',url);
+                    if (!objectURLMap.has(url)) {
+                        return console.warn('object missing',url)
+                    }
+                    fs.unlinkSync(objectURLMap[url]);
+                    objectURLMap.delete(url);
                 };
-            }
+            },
         });
     },
 };
