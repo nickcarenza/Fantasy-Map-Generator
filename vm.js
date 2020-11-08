@@ -42,10 +42,6 @@ module.exports = {
                 window.location = new URL(rootURL);
                 window.location.reload = () => {};
 
-                window.fetch = function() {
-                    return Promise.reject(new Error('Fetch not supported'));
-                };
-
                 // TODO Layout methods (i.e. .getComputedTextLength, .getBBox, .getTotalLength)
                 // https://github.com/jsdom/jsdom/issues/1664
                 window.Element.prototype.getComputedTextLength = function() {
@@ -116,6 +112,11 @@ module.exports = {
                     objectURLMap.delete(url);
                 };
             },
+        }).then((dom) => {
+            let script = dom.window.document.createElement("script");
+            script.src = 'libs/fetch.umd.js';
+            dom.window.document.body.appendChild(script);
+            return dom;
         });
     },
 };
