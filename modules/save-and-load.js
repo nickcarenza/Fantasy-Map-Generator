@@ -195,12 +195,19 @@ function GFontToDataURI(url) {
       let s = document.createElement('style');
       s.innerHTML = text;
       document.head.appendChild(s);
-      const styleSheet = Array.prototype.filter.call(document.styleSheets, sS => sS.ownerNode === s)[0];
-
+      
+      // const styleSheet = Array.prototype.filter.call(document.styleSheets, sS => sS.ownerNode === s)[0];
+      // jsdom bug - ownerNode not supported: https://github.com/jsdom/jsdom/issues/992
+      const styleSheet = Array.from(document.styleSheets)[document.styleSheets.length-1];
+      
       const FontRule = rule => {
         const src = rule.style.getPropertyValue('src');
-        const url = src ? src.split('url(')[1].split(')')[0] : "";
-        return {rule, src, url: url.substring(url.length - 1, 1)};
+        // const url = src ? src.split('url(')[1].split(')')[0] : "";
+        // return {rule, src, url: url.substring(url.length - 1, 1)};
+        
+        // I was getting some weird behavior with the above implementation stripping the first and last letters of the url
+        const url = src ? src.match(/url\((.+?)\)/)[1] : "";
+        return {rule, src, url};
       }
       const fontProms = [];
 
@@ -223,7 +230,8 @@ function GFontToDataURI(url) {
       }
       document.head.removeChild(s); // clean up
       return Promise.all(fontProms); // wait for all this has been done
-    });
+    })
+    .catch(err => ERROR && console.error(err.message));
 }
 
 // prepare map data for saving
