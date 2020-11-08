@@ -5,6 +5,8 @@
   "main": "main.js",
   "dependencies": {
     "canvas": "^2.6.1",
+    "express": "^4.17.1",
+    "generic-pool": "^3.7.1",
     "jsdom": "^16.4.0"
   },
   "devDependencies": {},
