@@ -174,7 +174,14 @@ function applyMapSize() {
   svgWidth = Math.min(graphWidth, window.innerWidth);
   svgHeight = Math.min(graphHeight, window.innerHeight);
   svg.attr("width", svgWidth).attr("height", svgHeight);
-  zoom.translateExtent([[0, 0], [graphWidth, graphHeight]]).scaleExtent([zoomMin, zoomMax]).scaleTo(svg, zoomMin);
+  zoom.translateExtent([[0, 0], [graphWidth, graphHeight]])
+    .scaleExtent([zoomMin, zoomMax]);
+  try {
+    zoom.scaleTo(svg, zoomMin);
+  } catch (e) {
+    // Doesn't run in jsdom due to SVG limitations
+    // https://github.com/jsdom/jsdom/issues/2531
+  }
 }
 
 function toggleFullscreen() {

@@ -1,0 +1,24 @@
+{
+  "name": "fantasy-map-generator",
+  "version": "1.0.0",
+  "description": "Azgaar's _Fantasy Map Generator_. Online tool generating interactive and highly customizable svg maps based on voronoi diagram.",
+  "main": "main.js",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "jsdom": "^16.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azgaar/Fantasy-Map-Generator.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Azgaar/Fantasy-Map-Generator/issues"
+  },
+  "homepage": "https://github.com/Azgaar/Fantasy-Map-Generator#readme"
+}
